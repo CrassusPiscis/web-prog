@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>РосСтудентНадзор</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image" href="img/OurMoodCat.png">
+</head>
+
+<body>
+
+<header class="header">
+    <div class="container">
+        <h1>Система контроля студентов</h1>
+        <img src="img/general_Mayo.jpg" style="width: 15%">
+        <p>Учёт содержащихся студентов</p>
+    </div>
+</header>
+
+<h2>Фильтрация</h2>
+
+<form id="filterForm">
+
+    <p>
+        <label for="filterGroup">Группа:</label>
+        <br>
+        <input
+            type="text"
+            id="filterGroup"
+            placeholder="Например: P3320"
+        >
+    </p>
+
+    <p>
+        <label for="filterDormitory">Общежитие:</label>
+        <br>
+
+        <select id="filterDormitory">
+            <option value="">Все общежития</option>
+
+            <option value="Белорусская улица, 6">
+                Белорусская улица, 6
+            </option>
+
+            <option value="Вяземский переулок, 5-7">
+                Вяземский переулок, 5-7
+            </option>
+
+            <option value="Альпийский переулок, 15к2">
+                Альпийский переулок, 15к2
+            </option>
+
+            <option value="Улица Ленсовета, 23А">
+                Улица Ленсовета, 23А
+            </option>
+
+            <option value="Серебристый бульвар, 29 1А">
+                Серебристый бульвар, 29 1А
+            </option>
+
+            <option value="Не в общежитии">
+                Не в общежитии
+            </option>
+        </select>
+    </p>
+
+    <button type="submit">
+        Применить фильтры
+    </button>
+
+    <button type="button" id="resetFilters">
+        Сбросить
+    </button>
+
+</form>
+
+<main class="container">
+
+    <section class="page-header">
+        <div>
+            <h2>Список студентов</h2>
+            <p>Здесь отображаются все студенты системы</p>
+        </div>
+
+        <a href="form.html" class="button">
+            + Добавить студента
+        </a>
+    </section>
+
+
+    <section class="students-section">
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Группа</th>
+                    <th>ИСУ ID</th>
+                    <th>Общежитие</th>
+                    <th>Комната</th>
+                    <th>Иностранец</th>
+                    <th>Действия</th>
+                </tr>
+                </thead>
+
+                <tbody id="studentsTableBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+<script src="js/storage.js?v=2"></script>
+<script src="js/actions.js?v=2"></script>
+<script src="js/students.js?v=2"></script>
+</body>
+</html>

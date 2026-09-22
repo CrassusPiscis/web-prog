@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Добавление студента</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image" href="img/OurMoodCat.png">
+</head>
+
+<body>
+
+<header>
+    <h1>Система управления студентами</h1>
+</header>
+
+<main>
+
+    <h2 id="formTitle">Добавление студента</h2>
+
+    <form id="studentForm">
+
+        <p id="errorMessage"></p>
+
+        <p>
+            <label for="fullName">ФИО студента:</label>
+            <br>
+            <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    required
+            >
+        </p>
+
+        <p>
+            <label for="group">Группа:</label>
+            <br>
+            <input
+                    type="text"
+                    id="group"
+                    name="group"
+                    pattern="[A-Za-z][0-9]{4}"
+                    maxlength="5"
+                    placeholder="Например: P3221"
+                    required
+            >
+        </p>
+
+        <p>
+            <label for="isuId">ИСУ ID:</label>
+            <br>
+            <input
+                    type="number"
+                    id="isuId"
+                    name="isuId"
+                    required
+            >
+        </p>
+
+        <p>
+            <label for="dormitory">Выберите общежитие:</label>
+            <br>
+            <select
+                    id="dormitory"
+                    required
+            >
+              <option value="Белорусская улица, 6" selected>Белорусская улица, 6</option>
+              <option value="Вяземский переулок, 5-7">Вяземский переулок, 5-7</option>
+              <option value="Альпийский переулок, 15к2">Альпийский переулок, 15к2</option>
+              <option value="Улица Ленсовета, 23А">Улица Ленсовета, 23А</option>
+              <option value="Серебристый бульвар, 29 1А">Серебристый бульвар, 29 1А</option>
+              <option value="Не в общежитии">Не в общежитии</option>
+            </select>
+        </p>
+
+        <p>
+            <label for="room">Комната:</label>
+            <br>
+            <input
+                    type="number"
+                    id="room"
+                    name="room"
+                    required
+            >
+        </p>
+
+        <p>
+            <label for="moveInDate">Срок заселения:</label>
+            <br>
+            <input
+                    type="date"
+                    id="moveInDate"
+                    name="moveInDate"
+                    required
+            >
+        </p>
+
+        <p>
+            <label>
+                <input
+                        type="checkbox"
+                        id="foreigner"
+                        name="foreigner"
+                >
+                Студент является иностранцем
+            </label>
+        </p>
+
+        <p>
+            <label for="notes">Заметки:</label>
+            <br>
+            <textarea
+                    id="notes"
+                    name="notes"
+                    rows="5"
+            ></textarea>
+        </p>
+
+        <button type="submit">
+            Сохранить
+        </button>
+
+        <a href="index.html">
+            Отмена
+        </a>
+
+    </form>
+
+</main>
+<script src="js/storage.js"></script>
+<script src="js/form.js"></script>
+</body>
+</html>

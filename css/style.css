@@ -1,0 +1,52 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #eef2f3;
+    color: #222;
+    text-align: center;
+}
+
+table {
+    width: 90%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: white;
+    min-width: 700px;
+}
+
+th,
+td {
+    border: 1px solid #555;
+    padding: 10px;
+}
+
+th {
+    background-color: #d9e2ec;
+}
+
+button {
+    padding: 5px 10px;
+}
+
+#studentInfo {
+    width: 90%;
+    margin: 20px auto;
+    padding: 15px;
+    background-color: white;
+    border: 1px solid #555;
+    text-align: left;
+}
+
+#studentInfo p {
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+}
+
+#errorMessage {
+    min-height: 20px;
+    font-weight: bold;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}

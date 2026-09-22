@@ -1,0 +1,24 @@
+[
+    {
+        "id": 2,
+        "fullName": "Петрова Анна Сергеевна",
+        "group": "P3321",
+        "isuId": 123457,
+        "dormitory": "Вяземский переулок, 5-7",
+        "room": 312,
+        "moveInDate": "2026-09-02",
+        "foreigner": false,
+        "notes": null
+    },
+    {
+        "id": 4,
+        "fullName": "Барабуля Иван Вазгенович",
+        "group": "P3212",
+        "isuId": 536598,
+        "dormitory": "Белорусская улица, 6",
+        "room": 785,
+        "moveInDate": "2027-09-16",
+        "foreigner": false,
+        "notes": null
+    }
+]
