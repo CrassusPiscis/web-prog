@@ -1,7 +1,7 @@
 # валидация введеных значений, все нужное из фастапи, классы с методами для работы
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Response
-from models import Student, StudentCreate, StudentUpdate
+from models import Student, StudentCreate, StudentUpdate, StudentQuery
 from services import student_service
 
 router = APIRouter(
@@ -114,15 +114,15 @@ def delete_student(student_id: int):
 
 # QUERY /api/requests/:id
 @router.api_route(
-    "/{student_id}",
+    "",
     methods=["QUERY"],
-    response_model=Student
+    response_model=list[Student]
 )
-def query_student(student_id: int):
-    student = student_service.get_student_by_id(student_id)
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Студент не найден"
-        )
-    return student
+def query_students(query: StudentQuery):
+    return student_service.get_all_students(
+        group=query.group,
+        dormitory=query.dormitory,
+        isu_id=query.isuId,
+        room=query.room,
+        foreigner=query.foreigner
+    )

@@ -45,3 +45,11 @@ class StudentUpdate(BaseModel):
     moveInDate: Optional[date] = None
     foreigner: Optional[bool] = None
     notes: Optional[str] = None
+
+#
+class StudentQuery(BaseModel):
+    group: Optional[str] = None
+    dormitory: Optional[str] = None
+    isuId: Optional[int] = None
+    room: Optional[int] = None
+    foreigner: Optional[bool] = None
