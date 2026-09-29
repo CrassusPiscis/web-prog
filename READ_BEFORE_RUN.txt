@@ -1,5 +1,2 @@
-Просьба, запускай ювикорн так: 
-
-python -B -m uvicorn main:app --reload
-
-Иначе пукэш будет повсюду
+ЗАПУСК 
+docker compose up --build
