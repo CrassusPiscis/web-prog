@@ -27,6 +27,43 @@ button {
     padding: 5px 10px;
 }
 
+#million-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+
+    background-color: green;
+    color: white;
+
+    padding: 15px 25px;
+    border: none;
+    border-radius: 8px;
+
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+
+    z-index: 9999;
+}
+
+#remove-million-button {
+    position: fixed;
+    top: 75px;
+    right: 20px;
+
+    background-color: red;
+    color: white;
+
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+
+    z-index: 9999;
+}
 #studentInfo {
     width: 90%;
     margin: 20px auto;
