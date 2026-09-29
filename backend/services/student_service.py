@@ -1,101 +1,124 @@
-# реализуем непосресну работу с репкой
 from repositories.student_repository import (
     get_students,
-    save_students
+    change_students
 )
 
-# вывести всех студентов
-def get_all_students(
+
+async def get_all_students(
     group=None,
     dormitory=None,
     isu_id=None,
     room=None,
     foreigner=None
 ):
-    students = get_students()
+    students = await get_students()
 
     if group is not None:
         students = [
-            student for student in students
-            if student["group"] == group
+            s for s in students
+            if s["group"] == group
         ]
 
     if dormitory is not None:
         students = [
-            student for student in students
-            if student["dormitory"] == dormitory
+            s for s in students
+            if s["dormitory"] == dormitory
         ]
 
     if isu_id is not None:
         students = [
-            student for student in students
-            if student["isuId"] == isu_id
+            s for s in students
+            if s["isuId"] == isu_id
         ]
 
     if room is not None:
         students = [
-            student for student in students
-            if student["room"] == room
+            s for s in students
+            if s["room"] == room
         ]
 
     if foreigner is not None:
         students = [
-            student for student in students
-            if student["foreigner"] == foreigner
+            s for s in students
+            if s["foreigner"] == foreigner
         ]
 
     return students
 
-# студень с конкретным айди
-def get_student_by_id(student_id):
-    students = get_students()
+
+async def get_student_by_id(student_id):
+    students = await get_students()
+
     for student in students:
         if student["id"] == student_id:
             return student
+
     return None
 
-# проверка исушника на оригинальность (не учитывая собственно сравниваемого человека-студеня)
-def is_isu_id_unique(isu_id, exclude_id=None):
-    students = get_students()
-    for student in students:
-        if student["isuId"] == isu_id:
-            if exclude_id is None or student["id"] != exclude_id:
-                return False
-    return True
 
-# мегакрутейшаясверхиновационная система добавления студеня
-def create_student(student_data):
-    students = get_students()
-    new_id = 1
-    if students:
+
+async def create_student(student_data):
+
+    def operation(students):
+        for student in students:
+            if student["isuId"] == student_data["isuId"]:
+                return None, False
+
         new_id = max(
-            student["id"]
-            for student in students
+            (student["id"] for student in students),
+            default=0
         ) + 1
-    student = {
-        "id": new_id,
-        **student_data
-    }
-    students.append(student)
-    save_students(students)
-    return student
 
-# обноваление данных о студенте по айди
-def update_student(student_id, student_data):
-    students = get_students()
-    for student in students:
-        if student["id"] == student_id:
-            student.update(student_data)
-            save_students(students)
-            return student
-    return None
+        new_student = {
+            "id": new_id,
+            **student_data
+        }
 
-# прощаемся со студенем
-def delete_student(student_id):
-    students = get_students()
-    for student in students:
-        if student["id"] == student_id:
-            students.remove(student)
-            save_students(students)
-            return True
-    return False
+        students.append(new_student)
+
+        return new_student, True
+
+    return await change_students(operation)
+
+
+async def update_student(student_id, student_data):
+
+    def operation(students):
+        target = None
+
+        for student in students:
+            if student["id"] == student_id:
+                target = student
+                break
+
+        if target is None:
+            return ("not_found", None), False
+
+        if "isuId" in student_data:
+            new_isu_id = student_data["isuId"]
+
+            for student in students:
+                if (
+                    student["isuId"] == new_isu_id
+                    and student["id"] != student_id
+                ):
+                    return ("duplicate", None), False
+
+        target.update(student_data)
+
+        return ("ok", target), True
+
+    return await change_students(operation)
+
+
+async def delete_student(student_id):
+
+    def operation(students):
+        for student in students:
+            if student["id"] == student_id:
+                students.remove(student)
+                return True, True
+
+        return False, False
+
+    return await change_students(operation)
