@@ -154,7 +154,7 @@ public class StudentRepository {
                 )
                 .from(STUDENTS)
                 .where(condition)
-                .orderBy(orderBy)
+                .orderBy(orderBy, ID.asc())
                 .limit(size)
                 .offset(page * size)
                 .fetch(record -> new StudentResponse(

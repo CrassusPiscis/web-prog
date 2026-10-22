@@ -17,8 +17,10 @@ import java.util.Set;
 public class StudentService {
 
     private final StudentRepository repository;
+    private final jakarta.validation.Validator validator;
 
-    public StudentService(StudentRepository repository) {
+    public StudentService(StudentRepository repository, jakarta.validation.Validator validator) {
+        this.validator = validator;
         this.repository = repository;
     }
 
@@ -34,7 +36,7 @@ public class StudentService {
             String sortBy,
             String direction
     ) {
-        if (page < 0) {
+        if (page < 0 || (long) page * size > Integer.MAX_VALUE) {
             throw new BadRequestException(
                     "Номер страницы не может быть отрицательным"
             );
@@ -200,6 +202,10 @@ public class StudentService {
                                 : existing.notes()
                 );
 
+        var violations = validator.validate(updated);
+        if (!violations.isEmpty()) {
+            throw new jakarta.validation.ConstraintViolationException(violations);
+        }
         return repository.update(id, updated);
     }
 

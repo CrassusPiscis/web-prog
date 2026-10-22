@@ -12,8 +12,8 @@ async function deleteStudent(id) {
         return;
     }
     try {
-        const response = await fetch(
-            `http://127.0.0.1:8000/api/requests/${id}`,
+        const response = await apiFetch(
+            `/api/requests/${id}`,
             {
                 method: "DELETE"
             }

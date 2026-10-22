@@ -12,6 +12,7 @@ public record StudentCreateRequest(
         @NotBlank(
                 message = "ФИО обязательно"
         )
+        @jakarta.validation.constraints.Size(max = 255)
         String fullName,
 
         @NotBlank(
@@ -34,6 +35,7 @@ public record StudentCreateRequest(
         @NotBlank(
                 message = "Общежитие обязательно"
         )
+        @jakarta.validation.constraints.Size(max = 255)
         String dormitory,
 
         @NotNull(

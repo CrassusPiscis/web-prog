@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AuthService.class);
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
@@ -85,6 +86,7 @@ public class AuthService {
             );
         }
 
+        log.info("Authentication succeeded for user id={}", user.id());
         return createTokens(user);
     }
 
@@ -114,6 +116,7 @@ public class AuthService {
             );
         }
 
+        log.info("Authentication succeeded for user id={}", user.id());
         return createTokens(user);
     }
 

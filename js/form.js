@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/api/requests";
+const API_URL = "/api/requests";
 const form = document.getElementById("studentForm");
 const errorMessage = document.getElementById("errorMessage");
 const params = new URLSearchParams(window.location.search);
@@ -9,7 +9,7 @@ async function loadStudentForEdit() {
         return;
     }
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `${API_URL}/${studentId}`
         );
         if (response.status === 404) {
@@ -94,7 +94,7 @@ form.addEventListener(
             }
 
 
-            const response = await fetch(
+            const response = await apiFetch(
                 url,
                 {
                     method: method,

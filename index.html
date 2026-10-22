@@ -24,6 +24,9 @@
 <h2>Фильтрация</h2>
 
 <form id="filterForm">
+    <label>Поиск <input id="search" type="search"></label>
+    <label>Сортировка <select id="sortBy"><option value="id">ID</option><option value="fullName">ФИО</option><option value="group">Группа</option><option value="isuId">ИСУ</option><option value="dormitory">Общежитие</option><option value="room">Комната</option><option value="moveInDate">Дата заселения</option></select></label>
+    <select id="direction" aria-label="Направление"><option value="asc">По возрастанию</option><option value="desc">По убыванию</option></select>
 
     <p>
         <label for="filterGroup">Группа:</label>
@@ -120,7 +123,9 @@
 
     </section>
 
+<p><button id="prevPage">Назад</button> <span id="pageInfo"></span> <button id="nextPage">Далее</button></p>
 </main>
+<script src="js/api.js"></script>
 <script src="js/storage.js?v=2"></script>
 <script src="js/actions.js?v=2"></script>
 <script src="js/students.js?v=2"></script>

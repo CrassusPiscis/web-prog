@@ -15,6 +15,7 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(StudentNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleStudentNotFound(
@@ -166,12 +167,29 @@ public class GlobalExceptionHandler {
     }
 
 
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConstraints(jakarta.validation.ConstraintViolationException exception) {
+        Map<String, String> details = new LinkedHashMap<>();
+        exception.getConstraintViolations().forEach(v -> details.put(v.getPropertyPath().toString(), v.getMessage()));
+        return ResponseEntity.badRequest().body(ApiErrorResponse.of(400, "Validation failed", details));
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethod(org.springframework.web.HttpRequestMethodNotSupportedException exception) {
+        return ResponseEntity.status(405).body(ApiErrorResponse.of(405, "Method not allowed"));
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleMedia(org.springframework.web.HttpMediaTypeNotSupportedException exception) {
+        return ResponseEntity.status(415).body(ApiErrorResponse.of(415, "Unsupported media type"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(
             Exception exception
     ) {
 
-        exception.printStackTrace();
+        log.error("Unhandled request failure", exception);
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

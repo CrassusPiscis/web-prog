@@ -22,6 +22,7 @@ public record RegisterRequest(
         @Email(
                 message = "Некорректный email"
         )
+        @Size(max = 255)
         String email,
 
         @NotBlank(
@@ -35,4 +36,8 @@ public record RegisterRequest(
         String password
 
 ) {
+    @jakarta.validation.constraints.AssertTrue(message = "Password must fit in 72 UTF-8 bytes")
+    public boolean isPasswordWithinBcryptLimit() {
+        return password == null || password.getBytes(java.nio.charset.StandardCharsets.UTF_8).length <= 72;
+    }
 }
