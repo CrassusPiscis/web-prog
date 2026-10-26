@@ -1,6 +1,7 @@
 package com.example.webprog.security;
 
 import com.example.webprog.exception.UnauthorizedException;
+import com.example.webprog.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,6 +22,7 @@ public class JwtAuthenticationFilter
         extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
     private final JwtAuthenticationEntryPoint
             authenticationEntryPoint;
@@ -28,9 +30,11 @@ public class JwtAuthenticationFilter
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
+            UserRepository userRepository,
             JwtAuthenticationEntryPoint authenticationEntryPoint
     ) {
         this.jwtService = jwtService;
+        this.userRepository = userRepository;
         this.authenticationEntryPoint =
                 authenticationEntryPoint;
     }
@@ -86,26 +90,34 @@ public class JwtAuthenticationFilter
             String username =
                     claims.getSubject();
 
-            String role =
-                    claims.get(
-                            "role",
-                            String.class
-                    );
-
-
-            if (
-                    username == null
-                            || role == null
-            ) {
+            if (username == null || username.isBlank()) {
                 throw new UnauthorizedException(
                         "Некорректный токен"
                 );
             }
 
+            // Роль могла измениться после выдачи токена: читаем её из БД.
+            UserAuthData user = userRepository.findAuthByUsername(username);
+
+            if (user == null) {
+                throw new UnauthorizedException(
+                        "Пользователь больше не существует"
+                );
+            }
+
+            // Не позволяем старому токену войти в заново созданный аккаунт
+            // с тем же именем, но другим ID.
+            Number tokenUserId = claims.get("userId", Number.class);
+            if (tokenUserId == null || user.id() == null
+                    || tokenUserId.longValue() != user.id().longValue()) {
+                throw new UnauthorizedException("Некорректный токен");
+            }
+
+            String role = user.role();
 
             if (
-                    !role.equals("USER")
-                            && !role.equals("ADMIN")
+                    !"USER".equals(role)
+                            && !"ADMIN".equals(role)
             ) {
                 throw new UnauthorizedException(
                         "Некорректная роль"
@@ -136,11 +148,6 @@ public class JwtAuthenticationFilter
                     );
 
 
-            filterChain.doFilter(
-                    request,
-                    response
-            );
-
         } catch (UnauthorizedException exception) {
 
             SecurityContextHolder.clearContext();
@@ -153,7 +160,10 @@ public class JwtAuthenticationFilter
                             exception
                     )
             );
+            return;
         }
+
+        filterChain.doFilter(request, response);
     }
 
 
