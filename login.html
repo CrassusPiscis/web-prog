@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="container">
+    <h1>Вход в систему</h1>
+    <form id="authForm">
+        <p><label>Имя пользователя <input name="username" required minlength="3" maxlength="100" autocomplete="username"></label></p>
+        <p id="emailField" hidden><label>Email <input name="email" type="email" maxlength="255" autocomplete="email"></label></p>
+        <p><label>Пароль <input name="password" type="password" required autocomplete="current-password"></label></p>
+        <p id="authError" role="alert"></p>
+        <button type="submit" id="submitAuth">Войти</button>
+        <button type="button" id="toggleAuth">Регистрация</button>
+    </form>
+</main>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

@@ -1,4 +1,5 @@
-const API_URL = "http://127.0.0.1:8000/api/requests";
+let currentPage = 0;
+const API_URL = "/api/requests";
 const tableBody = document.getElementById("studentsTableBody");
 const filterForm = document.getElementById("filterForm");
 const resetFiltersButton = document.getElementById("resetFilters");
@@ -8,7 +9,7 @@ async function loadStudents() {
     try {
         const group = document.getElementById("filterGroup").value.trim();
         const dormitory = document.getElementById("filterDormitory").value;
-        const params = new URLSearchParams();
+        const params = new URLSearchParams({ page: currentPage, size: 10, search: document.getElementById("search").value.trim(), sortBy: document.getElementById("sortBy").value, direction: document.getElementById("direction").value });
 
         if (group !== "") {
             params.append("group", group);
@@ -26,7 +27,7 @@ async function loadStudents() {
             url += "?" + params.toString();
         }
 
-        const response = await fetch(url);
+        const response = await apiFetch(url);
         if (!response.ok) {
             throw new Error(
                 "Не удалось загрузить студентов"
@@ -34,7 +35,10 @@ async function loadStudents() {
         }
 
         const students = await response.json();
-        renderStudents(students);
+        renderStudents(students.items);
+        document.getElementById("pageInfo").textContent = `${students.page + 1} / ${Math.max(1, students.totalPages)} (${students.total})`;
+        document.getElementById("nextPage").disabled = students.page + 1 >= students.totalPages;
+        document.getElementById("prevPage").disabled = students.page === 0;
     } catch (error) {
         console.error(error);
 
@@ -76,10 +80,10 @@ function renderStudents(students) {
                 <button onclick="viewStudent(${student.id})">
                     Просмотр
                 </button>
-                <button onclick="editStudent(${student.id})">
+                <button ${currentRole() !== "ADMIN" ? "hidden" : ""} onclick="editStudent(${student.id})">
                     Изменить
                 </button>
-                <button onclick="deleteStudent(${student.id})">
+                <button ${currentRole() !== "ADMIN" ? "hidden" : ""} onclick="deleteStudent(${student.id})">
                     Удалить
                 </button>
             </td>
@@ -92,6 +96,7 @@ filterForm.addEventListener(
     "submit",
     function (event) {
         event.preventDefault();
+        currentPage = 0;
         loadStudents();
     }
 );
@@ -99,6 +104,8 @@ filterForm.addEventListener(
 resetFiltersButton.addEventListener(
     "click",
     function () {
+        currentPage = 0;
+        filterForm.reset();
         document.getElementById("filterGroup").value = "";
         document.getElementById("filterDormitory").value = "";
         loadStudents();
@@ -106,3 +113,5 @@ resetFiltersButton.addEventListener(
 );
 
 loadStudents();
+document.getElementById("nextPage").onclick = () => { currentPage++; loadStudents(); };
+document.getElementById("prevPage").onclick = () => { if (currentPage > 0) currentPage--; loadStudents(); };
