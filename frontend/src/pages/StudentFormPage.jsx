@@ -3,6 +3,14 @@ import { Link, useNavigate, useParams } from "react-router";
 import { studentsApi } from "../api/studentsApi";
 import { ErrorMessage, Loading } from "../components/Feedback";
 import { validateStudent } from "../utils/validation";
+const dormitories = [
+  "Белорусская улица, 6",
+  "Вяземский переулок, 5-7",
+  "Альпийский переулок, 15к2",
+  "Улица Ленсовета, 23А",
+  "Серебристый бульвар, 29 1А",
+  "Не в общежитии",
+];
 const empty = {
   fullName: "",
   group: "",
@@ -17,7 +25,7 @@ const fields = [
   ["fullName", "ФИО", "text"],
   ["group", "Группа", "text"],
   ["isuId", "ИСУ ID", "number"],
-  ["dormitory", "Общежитие", "text"],
+  ["dormitory", "Общежитие", "select"],
   ["room", "Комната", "number"],
   ["moveInDate", "Дата заселения", "date"],
 ];
@@ -111,15 +119,38 @@ export default function StudentFormPage() {
               {fields.map(([name, label, type]) => (
                 <label key={name}>
                   {label} *
-                  <input
-                    name={name}
-                    type={type}
-                    value={form[name]}
-                    onChange={change}
-                    min={type === "number" ? 1 : undefined}
-                    step={type === "number" ? 1 : undefined}
-                    aria-invalid={!!errors[name]}
-                  />
+                  {type === "select" ? (
+                    <select
+                      name={name}
+                      value={form[name]}
+                      onChange={change}
+                      required
+                      aria-invalid={!!errors[name]}
+                    >
+                      <option value="">Выберите общежитие</option>
+                      {form.dormitory &&
+                        !dormitories.includes(form.dormitory) && (
+                          <option value={form.dormitory}>
+                            {form.dormitory}
+                          </option>
+                        )}
+                      {dormitories.map((address) => (
+                        <option key={address} value={address}>
+                          {address}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      name={name}
+                      type={type}
+                      value={form[name]}
+                      onChange={change}
+                      min={type === "number" ? 1 : undefined}
+                      step={type === "number" ? 1 : undefined}
+                      aria-invalid={!!errors[name]}
+                    />
+                  )}
                   <small className="field-error">{errors[name]}</small>
                 </label>
               ))}
