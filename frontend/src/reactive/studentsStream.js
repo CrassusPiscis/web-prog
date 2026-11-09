@@ -34,7 +34,6 @@ export function createStudentsStream(load = studentsApi.list, delay = 300) {
     wait: 0,
     revision: 0,
   });
-  // Отписка Observable отменяет сетевой запрос, а не только скрывает его результат.
   const load$ = (params) =>
     new Observable((subscriber) => {
       const controller = new AbortController();
@@ -50,7 +49,6 @@ export function createStudentsStream(load = studentsApi.list, delay = 300) {
     });
   const state$ = params$.pipe(
     distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
-    // Новое событие сразу отменяет старый запрос. Пауза применяется только к вводу текста.
     switchMap(({ params, wait }) =>
       timer(wait).pipe(
         switchMap(() => load$(params)),

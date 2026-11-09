@@ -1,4 +1,3 @@
-// Токены сохраняются только на время вкладки. Счётчик защищает от позднего refresh после logout.
 const KEY = "dormitory.session";
 let generation = 0;
 export const sessionVersion = () => generation;

@@ -57,7 +57,6 @@ async function refreshTokens() {
   }
 }
 
-// signal нужен RxJS и страницам для отмены устаревших запросов.
 export async function request(path, { auth = true, body, ...options } = {}) {
   const version = sessionVersion();
   const send = () => {
@@ -78,7 +77,7 @@ export async function request(path, { auth = true, body, ...options } = {}) {
       options.signal?.throwIfAborted();
       if (sessionVersion() !== version)
         throw new ApiError(401, "Сессия завершена");
-      response = await send(); // Ровно одна повторная попытка.
+      response = await send(); 
     }
     if (auth && response.status === 401 && sessionVersion() === version)
       clearSession();
