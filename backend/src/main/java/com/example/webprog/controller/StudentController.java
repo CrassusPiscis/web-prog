@@ -27,6 +27,8 @@ public class StudentController {
     @GetMapping
     public PageResponse<StudentResponse> getStudents(
 
+            @ModelAttribute com.example.webprog.dto.StudentFilters filters,
+
             @RequestParam(required = false)
             String group,
 
@@ -58,6 +60,7 @@ public class StudentController {
             String direction
     ) {
         return service.getAllStudents(
+                filters,
                 group,
                 dormitory,
                 isuId,

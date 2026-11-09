@@ -116,6 +116,11 @@ public class AuthService {
             );
         }
 
+        Number tokenUserId = jwtService.parseToken(refreshToken).get("userId", Number.class);
+        if (tokenUserId == null || tokenUserId.longValue() != user.id().longValue()) {
+            throw new UnauthorizedException("Недействительный refresh-токен");
+        }
+
         log.info("Authentication succeeded for user id={}", user.id());
         return createTokens(user);
     }

@@ -25,6 +25,7 @@ public class StudentService {
     }
 
     public PageResponse<StudentResponse> getAllStudents(
+            com.example.webprog.dto.StudentFilters filters,
             String group,
             String dormitory,
             Long isuId,
@@ -56,7 +57,7 @@ public class StudentService {
                 "isuId",
                 "dormitory",
                 "room",
-                "moveInDate"
+                "moveInDate", "foreigner", "notes"
         );
 
         if (!allowedSortFields.contains(sortBy)) {
@@ -77,6 +78,7 @@ public class StudentService {
 
 
         return repository.findAll(
+                filters,
                 group,
                 dormitory,
                 isuId,

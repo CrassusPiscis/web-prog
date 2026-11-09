@@ -1,90 +1,78 @@
-import { useState } from "react";
-import StudentTable from "../components/StudentTable";
+import { useRef, useState } from "react";
+import { Link } from "react-router";
+import { useAuth } from "../auth/useAuth";
+import { studentsApi } from "../api/studentsApi";
+import useStudents from "../hooks/useStudents";
 import StudentFilters from "../components/StudentFilters";
-
-function StudentsPage() {
-    const [students, setStudents] = useState([
-        {
-            id: 1,
-            fullName: "Jotaro Kujo",
-            group: "P3221", 
-            dormitory: "Белорусская 6",
-            room: 907,
-        },
-        {
-            id: 2,
-            fullName: "Joseph Joestar",
-            group: "P3221", 
-            dormitory: "Белорусская 6",
-            room: 907,
-        }
-    ]);
-
-    const [search, setSearch] = useState("");
-    const [dormitory, setDormitory] = useState("");
-    const [sortBy, setSortBy] = useState("fullName");
-
-    function removeStudent(id) {
-        setStudents((currentStudents) =>
-        currentStudents.filter((student) => student.id !== id)
-        );
+import StudentTable from "../components/StudentTable";
+import Pagination from "../components/Pagination";
+import { ErrorMessage, Loading } from "../components/Feedback";
+export default function StudentsPage() {
+  const { user } = useAuth();
+  const { data, query, loading, error, update, reset, reload } = useStudents();
+  const [deleting, setDeleting] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const deleteLock = useRef(false);
+  async function removeStudent(student) {
+    if (
+      deleteLock.current ||
+      !window.confirm(`Удалить запись «${student.fullName}»?`)
+    )
+      return;
+    deleteLock.current = true;
+    setDeleting(student.id);
+    setDeleteError(null);
+    try {
+      await studentsApi.remove(student.id);
+      reload();
+    } catch (reason) {
+      setDeleteError(reason);
+    } finally {
+      setDeleting(null);
+      deleteLock.current = false;
     }
-
-    const normalizedSearch = search.trim().toLowerCase();
-
-    const dormitories = [
-        ...new Set(students.map((student) => student.dormitory)),
-    ];
-    
-    const filteredStudents = students.filter((student) => {
-        const matchesSearch = student.fullName
-            .toLowerCase()
-            .includes(normalizedSearch);
-
-        const matchesDormitory =
-            dormitory === "" || student.dormitory === dormitory;
-
-        return matchesSearch && matchesDormitory;
-        });
-
-        const sortedStudents = [...filteredStudents].sort((first, second) => {
-        if (sortBy === "room") {
-            return first.room - second.room;
-        }
-
-        return first.fullName.localeCompare(second.fullName, "ru");
-        });
-
-    return (
-        <main>
-            <h1>Студенты </h1>
-            <p>Здесь можно посмотреть студентов и управляеть записями.</p>
-            <p>Всего студентов: {students.length}</p>
-            <p>Найдено: {filteredStudents.length}</p>
-
-            <button type="button"> Добавить студента</button>
-
-            <StudentFilters
-            search={search}
-            onSearchChange={setSearch}
-            dormitory={dormitory}
-            onDormitoryChange={setDormitory}
-            dormitories={dormitories}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-            />
-
-            <StudentTable
-            students={sortedStudents}
+  }
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">ОБЩЕЖИТИЕ / УЧЁТ</p>
+          <h1>Студенты</h1>
+          <p className="muted">
+            Все записи, комнаты и даты заселения — в одном месте.
+          </p>
+        </div>
+        {user.role === "ADMIN" && (
+          <Link className="button" to="/students/new">
+            ＋ Добавить студента
+          </Link>
+        )}
+      </div>
+      <StudentFilters query={query} onChange={update} onReset={reset} />
+      <ErrorMessage error={deleteError || error} />
+      {error && (
+        <button className="secondary" onClick={reload}>
+          Повторить запрос
+        </button>
+      )}
+      {loading && <Loading />}
+      {!loading && data && (
+        <>
+          <StudentTable
+            students={data.items}
+            admin={user.role === "ADMIN"}
             onDelete={removeStudent}
-            emptyMessage={
-                students.length === 0
-                ? "Все студенты выселены"
-                : "По вашему запросу никого не найдено"
-            }
-            />
-        </main>
-    );
+            deleting={deleting}
+          />
+          <Pagination
+            page={data.page}
+            totalPages={data.totalPages}
+            total={data.total}
+            loading={loading}
+            onChange={(page) => update({ page })}
+          />
+        </>
+      )}
+    </>
+  );
 }
-
-export default StudentsPage;

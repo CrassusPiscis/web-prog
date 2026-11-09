@@ -56,6 +56,7 @@ public class StudentRepository {
     }
 
     public PageResponse<StudentResponse> findAll(
+            com.example.webprog.dto.StudentFilters filters,
             String group,
             String dormitory,
             Long isuId,
@@ -68,6 +69,12 @@ public class StudentRepository {
             String direction
     ) {
         Condition condition = noCondition();
+        if (filters.getId() != null) condition = condition.and(ID.eq(filters.getId()));
+        if (filters.getFullName() != null && !filters.getFullName().isBlank())
+            condition = condition.and(FULL_NAME.containsIgnoreCase(filters.getFullName()));
+        if (filters.getMoveInDate() != null) condition = condition.and(MOVE_IN_DATE.eq(filters.getMoveInDate()));
+        if (filters.getNotes() != null && !filters.getNotes().isBlank())
+            condition = condition.and(NOTES.containsIgnoreCase(filters.getNotes()));
 
         if (group != null && !group.isBlank()) {
             condition = condition.and(
@@ -116,6 +123,8 @@ public class StudentRepository {
             case "dormitory" -> DORMITORY;
             case "room" -> ROOM;
             case "moveInDate" -> MOVE_IN_DATE;
+            case "foreigner" -> FOREIGNER;
+            case "notes" -> NOTES;
             default -> ID;
         };
 
