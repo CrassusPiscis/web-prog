@@ -1,5 +1,6 @@
+"use client";
 import { useRef, useState } from "react";
-import { Link } from "react-router";
+import Link from "next/link";
 import { useAuth } from "../auth/useAuth";
 import { studentsApi } from "../api/studentsApi";
 import useStudents from "../hooks/useStudents";
@@ -7,9 +8,10 @@ import StudentFilters from "../components/StudentFilters";
 import StudentTable from "../components/StudentTable";
 import Pagination from "../components/Pagination";
 import { ErrorMessage, Loading } from "../components/Feedback";
-export default function StudentsPage() {
+export default function StudentsPage({ initialData }) {
   const { user } = useAuth();
-  const { data, query, loading, error, update, reset, reload } = useStudents();
+  const { data, query, loading, error, update, reset, reload } =
+    useStudents(initialData);
   const [deleting, setDeleting] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const deleteLock = useRef(false);
@@ -43,7 +45,7 @@ export default function StudentsPage() {
           </p>
         </div>
         {user.role === "ADMIN" && (
-          <Link className="button" to="/students/new">
+          <Link className="button" href="/students/new">
             ＋ Добавить студента
           </Link>
         )}

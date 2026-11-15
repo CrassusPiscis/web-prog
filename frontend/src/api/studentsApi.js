@@ -1,4 +1,5 @@
 import { request } from "./client.js";
+import { notifyStudentChanged } from "./studentEvents.js";
 export function queryString(params) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -12,9 +13,30 @@ export const studentsApi = {
     request(`/api/requests?${queryString(params)}`, { signal }),
   get: (id, signal) =>
     request(`/api/requests/${encodeURIComponent(id)}`, { signal }),
-  create: (body) => request("/api/requests", { method: "POST", body }),
-  update: (id, body) =>
-    request(`/api/requests/${encodeURIComponent(id)}`, { method: "PUT", body }),
-  remove: (id) =>
-    request(`/api/requests/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  create: async (body) => {
+    const result = await request("/api/requests", {
+      method: "POST",
+      body,
+    });
+
+    notifyStudentChanged();
+    return result;
+  },
+  update: async (id, body) => {
+    const result = await request(`/api/requests/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body,
+    });
+
+    notifyStudentChanged();
+    return result;
+  },
+  remove: async (id) => {
+    const result = await request(`/api/requests/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+
+    notifyStudentChanged();
+    return result;
+  },
 };

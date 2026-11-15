@@ -1,15 +1,15 @@
+"use client";
 import { useRef, useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router";
-import { useAuth } from "../auth/useAuth";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { safeReturnPath } from "../server/security";
 import { authApi } from "../api/authApi";
-import { ErrorMessage, Loading } from "../components/Feedback";
+import { ErrorMessage } from "../components/Feedback";
 import { validateCredentials } from "../utils/validation";
 import UniverGallery from "../components/UniverGallery";
 
-export default function AuthPage({ registering = false }) {
-  const { user, ready, login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function AuthPage({ registering = false, returnTo }) {
+  const router = useRouter();
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -20,8 +20,6 @@ export default function AuthPage({ registering = false }) {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
-  if (!ready) return <Loading />;
-  if (user) return <Navigate to="/students" replace />;
   function change(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
@@ -43,16 +41,9 @@ export default function AuthPage({ registering = false }) {
     try {
       if (registering)
         await authApi.register({ ...credentials, email: form.email.trim() });
-      await login(credentials);
-      const from = location.state?.from;
-      navigate(
-        typeof from === "string" &&
-          from.startsWith("/") &&
-          !from.startsWith("//")
-          ? from
-          : "/students",
-        { replace: true },
-      );
+      await authApi.login(credentials);
+      router.replace(safeReturnPath(returnTo));
+      router.refresh();
     } catch (reason) {
       setError(reason);
       setErrors(reason.details || {});
@@ -64,7 +55,7 @@ export default function AuthPage({ registering = false }) {
   return (
     <div className="auth-shell">
       <aside className="auth-story">
-        <Link className="brand" to="/">
+        <Link className="brand" href="/">
           Новая общага
         </Link>
         <div>
@@ -165,7 +156,7 @@ export default function AuthPage({ registering = false }) {
           </form>
           <p className="auth-switch">
             {registering ? "Уже есть аккаунт? " : "Впервые здесь? "}
-            <Link to={registering ? "/login" : "/register"}>
+            <Link href={registering ? "/login" : "/register"}>
               {registering ? "Войти" : "Зарегистрироваться"}
             </Link>
           </p>

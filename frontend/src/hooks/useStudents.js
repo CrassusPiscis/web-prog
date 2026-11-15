@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { createStudentsStream, initialQuery } from "../reactive/studentsStream";
-export default function useStudents() {
+import { subscribeToStudentChanges } from "../api/studentEvents.js";
+export default function useStudents(initialData) {
   const [stream] = useState(() => createStudentsStream());
   const [state, setState] = useState({
-    loading: true,
-    data: null,
+    loading: !initialData,
+    data: initialData,
     error: null,
     query: initialQuery,
   });
@@ -16,7 +17,11 @@ export default function useStudents() {
         stream.update({ page: 0 });
       else setState(next);
     });
-    return () => subscription.unsubscribe();
+    const unsubscribeChanges = subscribeToStudentChanges(() => stream.reload());
+    return () => {
+      unsubscribeChanges();
+      subscription.unsubscribe();
+    };
   }, [stream]);
   return {
     ...state,

@@ -1,0 +1,16 @@
+export const initialQuery = {
+  search: "",
+  id: "",
+  fullName: "",
+  group: "",
+  isuId: "",
+  dormitory: "",
+  room: "",
+  moveInDate: "",
+  foreigner: "",
+  notes: "",
+  page: 0,
+  size: 10,
+  sortBy: "fullName",
+  direction: "asc",
+};

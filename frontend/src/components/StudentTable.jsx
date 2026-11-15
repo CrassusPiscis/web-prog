@@ -1,4 +1,5 @@
-import { Link } from "react-router";
+"use client";
+import Link from "next/link";
 export default function StudentTable({ students, admin, onDelete, deleting }) {
   if (!students.length)
     return (
@@ -24,7 +25,7 @@ export default function StudentTable({ students, admin, onDelete, deleting }) {
           {students.map((student) => (
             <tr key={student.id}>
               <td>
-                <Link className="student-name" to={`/students/${student.id}`}>
+                <Link className="student-name" href={`/students/${student.id}`}>
                   {student.fullName}
                 </Link>
                 <div className="muted">
@@ -43,14 +44,14 @@ export default function StudentTable({ students, admin, onDelete, deleting }) {
               <td>{student.moveInDate}</td>
               <td>
                 <div className="actions">
-                  <Link className="text-link" to={`/students/${student.id}`}>
+                  <Link className="text-link" href={`/students/${student.id}`}>
                     Открыть
                   </Link>
                   {admin && (
                     <>
                       <Link
                         className="text-link"
-                        to={`/students/${student.id}/edit`}
+                        href={`/students/${student.id}/edit`}
                       >
                         Изменить
                       </Link>

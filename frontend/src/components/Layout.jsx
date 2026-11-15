@@ -1,12 +1,29 @@
-import { Link, NavLink, Outlet } from "react-router";
+"use client";
+import Link from "./NavigationLink";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { ErrorMessage } from "./Feedback";
 import { useAuth } from "../auth/useAuth";
-export default function Layout() {
+export default function Layout({ children }) {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
+  const [error, setError] = useState(null);
+  const [leaving, setLeaving] = useState(false);
+  async function leave() {
+    setLeaving(true);
+    setError(null);
+    try {
+      await logout();
+    } catch (reason) {
+      setError(reason);
+      setLeaving(false);
+    }
+  }
   return (
     <>
       <header className="topbar">
         <div className="container nav">
-          <Link className="brand" to="/students">
+          <Link className="brand" href="/students">
             <img
               className="brand-photo"
               src="/images/univer/general-mayo.jpg"
@@ -17,7 +34,10 @@ export default function Layout() {
             Новая общага
           </Link>
           <nav>
-            <NavLink to="/students">
+            <Link
+              href="/students"
+              className={pathname.startsWith("/students") ? "active" : ""}
+            >
               <img
                 className="nav-photo"
                 src="/images/univer/lunch-break.jpg"
@@ -26,8 +46,11 @@ export default function Layout() {
                 height="56"
               />
               Студенты
-            </NavLink>
-            <NavLink to="/profile">
+            </Link>
+            <Link
+              href="/profile"
+              className={pathname === "/profile" ? "active" : ""}
+            >
               <img
                 className="nav-photo"
                 src="/images/univer/session-mood.jpg"
@@ -36,21 +59,26 @@ export default function Layout() {
                 height="56"
               />
               Профиль
-            </NavLink>
+            </Link>
           </nav>
           <div className="account">
             <span className="badge">
               {user?.role === "ADMIN" ? "Администратор" : "Пользователь"}
             </span>
             <span>{user?.username}</span>
-            <button className="secondary small" onClick={logout}>
+            <button
+              className="secondary small"
+              disabled={leaving}
+              onClick={leave}
+            >
               Выйти
             </button>
           </div>
         </div>
       </header>
       <main className="container content">
-        <Outlet />
+        <ErrorMessage error={error} />
+        {children}
       </main>
       <footer className="container footer">
         Новая общага · Свои люди, свои комнаты

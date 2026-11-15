@@ -1,13 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { request } from "../src/api/client.js";
-import { clearSession, getTokens, startSession } from "../src/api/session.js";
-const storage = new Map();
-globalThis.sessionStorage = {
-  getItem: (key) => storage.get(key),
-  setItem: (key, value) => storage.set(key, value),
-  removeItem: (key) => storage.delete(key),
-};
 globalThis.window = new EventTarget();
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -15,50 +8,66 @@ const json = (body, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
-test("parallel 401 responses share a refresh and retry with new token", async () => {
-  startSession({ accessToken: "old", refreshToken: "refresh" });
-  let refreshes = 0;
+test("client uses same-origin cookies and never reads browser token storage", async () => {
+  globalThis.sessionStorage = {
+    getItem: () => {
+      throw new Error("Tokens must not be in JS");
+    },
+  };
   globalThis.fetch = async (url, options) => {
-    if (url === "/api/auth/refresh") {
-      refreshes++;
-      await new Promise((r) => setTimeout(r, 10));
-      return json({ accessToken: "new", refreshToken: "r2" });
-    }
-    return options.headers.get("Authorization") === "Bearer new"
-      ? json({ ok: true })
-      : json({ error: { message: "expired" } }, 401);
+    assert.equal(options.credentials, "same-origin");
+    assert.equal(options.headers.has("Authorization"), false);
+    assert.equal(options.cache, "no-store");
+    return json({ ok: true });
   };
-  const result = await Promise.all([request("/one"), request("/two")]);
-  assert.equal(refreshes, 1);
-  assert.ok(result.every((value) => value.ok));
+  assert.equal((await request("/api/users/me")).ok, true);
 });
-
-test("late refresh cannot restore session after logout", async () => {
-  startSession({ accessToken: "old", refreshToken: "r" });
-  let finish;
-  globalThis.fetch = async (url) =>
-    url === "/api/auth/refresh"
-      ? new Promise((resolve) => {
-          finish = resolve;
-        })
-      : json({}, 401);
-  const pending = request("/protected");
-  while (!finish) await new Promise((r) => setTimeout(r, 0));
-  clearSession();
-  finish(json({ accessToken: "late", refreshToken: "late" }));
-  await assert.rejects(pending, (error) => error.status === 401);
-  assert.deepEqual(getTokens(), {});
+test("401 ends session, 403 updates permissions; login errors do not redirect", async () => {
+  let ended = 0,
+    changed = 0;
+  const onEnd = () => ended++,
+    onChange = () => changed++;
+  window.addEventListener("session-ended", onEnd);
+  window.addEventListener("permissions-changed", onChange);
+  try {
+    globalThis.fetch = async () =>
+      json({ error: { message: "Unauthorized" } }, 401);
+    await assert.rejects(
+      request("/api/requests"),
+      (error) => error.status === 401,
+    );
+    await assert.rejects(
+      request("/api/auth/login", { method: "POST", body: {} }),
+      (error) => error.status === 401,
+    );
+    assert.equal(ended, 1);
+    globalThis.fetch = async () =>
+      json({ error: { message: "Forbidden" } }, 403);
+    await assert.rejects(
+      request("/api/requests"),
+      (error) => error.status === 403,
+    );
+    assert.equal(changed, 1);
+  } finally {
+    window.removeEventListener("session-ended", onEnd);
+    window.removeEventListener("permissions-changed", onChange);
+  }
 });
-
-test("403 does not refresh and 204 has no JSON body", async () => {
-  startSession({ accessToken: "token", refreshToken: "r" });
-  let refreshes = 0;
-  globalThis.fetch = async (url) => {
-    if (url.includes("refresh")) refreshes++;
-    return json({ error: { message: "forbidden" } }, 403);
-  };
-  await assert.rejects(request("/protected"), (error) => error.status === 403);
-  assert.equal(refreshes, 0);
+test("204, validation details and AbortError survive transport", async () => {
   globalThis.fetch = async () => new Response(null, { status: 204 });
-  assert.equal(await request("/protected", { method: "DELETE" }), null);
+  assert.equal(await request("/api/requests/1", { method: "DELETE" }), null);
+  globalThis.fetch = async () =>
+    json(
+      { error: { message: "Invalid", details: { fullName: "Required" } } },
+      400,
+    );
+  await assert.rejects(
+    request("/api/requests"),
+    (error) => error.details.fullName === "Required",
+  );
+  const abort = new DOMException("Aborted", "AbortError");
+  globalThis.fetch = async () => {
+    throw abort;
+  };
+  await assert.rejects(request("/api/requests"), (error) => error === abort);
 });

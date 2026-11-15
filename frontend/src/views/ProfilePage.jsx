@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { useAuth } from "../auth/useAuth";
 import { ErrorMessage } from "../components/Feedback";
@@ -5,6 +6,16 @@ export default function ProfilePage() {
   const { user: current, logout, refreshUser } = useAuth();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  async function leave() {
+    setLoading(true);
+    setError(null);
+    try {
+      await logout();
+    } catch (reason) {
+      setError(reason);
+      setLoading(false);
+    }
+  }
   async function refresh() {
     setLoading(true);
     setError(null);
@@ -53,7 +64,9 @@ export default function ProfilePage() {
           <button className="secondary" disabled={loading} onClick={refresh}>
             {loading ? "Обновляем…" : "Обновить данные"}
           </button>
-          <button onClick={logout}>Выйти из аккаунта</button>
+          <button disabled={loading} onClick={leave}>
+            Выйти из аккаунта
+          </button>
         </div>
       </section>
     </>

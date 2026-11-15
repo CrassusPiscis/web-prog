@@ -1,60 +1,57 @@
-# Новая общага — лабораторные №3 и №4
+# Новая общага — лабораторные №3, №4 и №5
 
-React + React Router + Context API + RxJS; Spring Boot + Spring Security + jOOQ; PostgreSQL.
+Next.js 16 (App Router) + React + Context API + RxJS; Spring Boot + Spring Security + jOOQ; PostgreSQL.
 
-## Быстрый запуск на Windows
+## Запуск на Windows
 
-Откройте Docker Desktop и дождитесь готовности сервера контейнеров.
+Открой Docker Desktop. Из корня проекта:
 
 ```powershell
-cd 'D:\ВЕБ\web-prog'
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/init-env.ps1
 docker compose up --build -d
-docker compose logs -f backend
+docker compose ps
 ```
 
-Первая команда подготовки создаёт `.env` со случайными паролями и JWT-секретом. Существующий `.env` она не меняет. Когда backend запущен, откройте http://localhost:8080. Логин администратора — `admin`, пароль находится в строке `BOOTSTRAP_ADMIN_PASSWORD` локального `.env`. Не публикуйте этот файл. Для обычного пользователя используйте регистрацию.
+Сайт: http://localhost:8080. Swagger Java: http://localhost:8000/swagger-ui/index.html.
+Логин администратора берётся из `BOOTSTRAP_ADMIN_USERNAME` (обычно `admin`), пароль — из `BOOTSTRAP_ADMIN_PASSWORD` локального `.env`. Обычный пользователь создаётся через регистрацию. `.env` не публикуется.
 
-Compose использует имя проекта `webprog-lab4` и отдельный volume. Старая база проекта `web-prog` не удаляется и автоматически не переносится в новый проект. Это позволяет проверять новую лабораторную без изменения старых данных.
-
-Swagger: http://localhost:8000/swagger-ui/index.html. Порты можно изменить в `.env`: `FRONTEND_PORT`, `BACKEND_PORT`.
-
-Необязательно, после готовности backend: `node scripts/seed-demo.mjs` добавит шесть учебных студентов для демонстрации поиска и пагинации. Существующие записи не изменяются, занятые ИСУ пропускаются. Скрипт использует администратора из локального `.env`.
-
-Остановить (данные сохраняются):
+Если backend и БД уже запущены, обновить только frontend:
 
 ```powershell
-docker compose down
+docker compose up -d --no-deps --build frontend
 ```
 
-`docker compose down -v` удаляет базу; для обычной остановки эту команду не используйте.
+Остановить с сохранением базы: `docker compose down`. Флаг `-v` удаляет volume базы.
+Имя Compose-проекта намеренно осталось `webprog-lab4`, чтобы продолжить использовать существующую базу. Миграция на Next.js не требует удаления/пересоздания данных.
 
-Если хотите настроить конфигурацию вручную, скопируйте `.env.example` в `.env`, заполните пароль базы и JWT_SECRET (Base64 минимум 32 случайных байт). BOOTSTRAP_ADMIN_* необязательны: они создают только новый аккаунт, существующему аккаунту права автоматически не повышают. Смена роли в базе действует со следующего запроса.
-
-При повторном использовании существующего PostgreSQL volume пароль DB_PASSWORD должен соответствовать паролю уже созданной БД. Изменение `.env` не меняет пароль существующей БД.
+При смене порта frontend задай в корневом `.env` также `APP_ORIGIN`, например `FRONTEND_PORT=8090` и `APP_ORIGIN=http://localhost:8090`. Открывай сайт именно по этому origin. Для HTTPS установи `COOKIE_SECURE=true`.
 
 ## Разработка frontend
 
-Backend и PostgreSQL можно оставить запущенными в Docker. Для frontend нужны Node.js 24 LTS и npm:
+Нужны Node.js 24 LTS и npm. Backend и PostgreSQL можно оставить в Docker.
 
 ```powershell
 cd frontend
+Copy-Item .env.example .env.local
 npm.cmd ci
 npm.cmd run dev
 ```
 
-Открыть http://127.0.0.1:5173. Адрес 127.0.0.1 уже закреплён в Vite. `/api` проксируется на http://127.0.0.1:8000; другой адрес задаётся через `frontend/.env` по примеру `frontend/.env.example`. Эти настройки относятся к серверу разработки. В Docker запросы проксирует Nginx.
+Открой http://localhost:5173. Настройки `.env.local`: `BACKEND_URL=http://127.0.0.1:8000`, `APP_ORIGIN=http://localhost:5173`, `COOKIE_SECURE=false`. Это серверные переменные, в браузер они не передаются.
 
-## Реализованные возможности
+## Что реализовано в пятой лабораторной
 
-- `/login`, `/register`, `/profile`; восстановление сессии и выход.
-- Access/refresh JWT, один общий refresh при нескольких 401, повтор исходного запроса максимум один раз.
-- USER: список и подробности; ADMIN: создание, полная правка и удаление с подтверждением.
-- Поиск, отдельные фильтры всех полей, сортировка по всем полям в обоих направлениях, серверная пагинация.
-- RxJS: BehaviorSubject, Observable, distinctUntilChanged, switchMap, timer, catchError, shareReplay; отписка вызывает AbortController.abort(). Пауза 300 мс для ввода, немедленная отмена старого запроса.
-- Валидация форм, сообщения API, загрузка и блокировка повторных отправок.
-- Адаптивный интерфейс, прямое открытие вложенных маршрутов через Nginx.
-- Многоэтапные Dockerfile, общий Compose, PostgreSQL volume и healthcheck.
+- Настоящий SSR: список, карточка и данные для редактирования загружаются сервером Next.js до выдачи страницы. Профиль приходит с серверной проверкой пользователя.
+- Файловая маршрутизация: `/login`, `/register`, `/students`, `/students/[id]`, `/students/new`, `/students/[id]/edit`, `/profile`.
+- `src/proxy.js` защищает маршруты до рендеринга; в Next.js 16 это новое название middleware. Текущая роль проверяется через Java, а не берётся на веру из cookie.
+- JWT access/refresh находятся в HttpOnly + SameSite=Lax cookie. Java выпускает и проверяет JWT; Next.js только хранит/передаёт их и обновляет через Java API.
+- BFF `/api/[...path]` передаёт разрешённые запросы Java-серверу. Пароли, бизнес-правила, роли, jOOQ и БД остаются в Java.
+- CSRF-защита изменяющих запросов на стороне Next.js: обязательный совпадающий Origin, блокировка cross-site запросов. JWT в Java по-прежнему передаётся как Bearer.
+- Кеш данных студентов: Next fetch cache, 60 секунд, ключ включает Authorization. Перед кешем выполняется живая проверка пользователя. После успешного POST/PUT/DELETE тег `students` немедленно инвалидируется.
+- Синхронизация вкладок через BroadcastChannel и обновление при возврате во вкладку. Карточка вызывает `router.refresh()`, список перезагружает RxJS-поток.
+- Все прежние фильтры, поиск, сортировка, пагинация, CRUD, валидация, роли и оформление сохранены.
+- Состояния загрузки в списке/формах и навигационных ссылках, error boundary, 404 и страница недостаточных прав.
+- Production Docker запускает Node.js/Next.js standalone от непривилегированного пользователя вместо статического Nginx.
 
 ## Проверки
 
@@ -65,36 +62,41 @@ npm.cmd run lint
 npm.cmd run build
 ```
 
-Backend (JDK 21 или новее):
+Проверка с работающим Docker из корня проекта:
 
 ```powershell
-cd backend
-.\mvnw.cmd -B -ntp test
+node scripts/verify-lab5.mjs
 ```
 
-Автотесты frontend проверяют отмену/порядок запросов, продолжение потока после ошибок, общий refresh, отсутствие восстановления сессии после logout, 403/204 и валидацию. Backend-тесты проверяют JWT и актуальность роли/аккаунта в фильтре. Они не заменяют проверку с настоящей БД.
+Этот скрипт использует администратора из `.env`, создаёт одну временную запись студента и удаляет её. Проверяет SSR HTML, JWT refresh, CSRF, CRUD, инвалидацию кеша, ошибки, logout. Если сайт на другом адресе, задай `LAB5_URL`.
 
-## Архитектура
+Backend при необходимости: `cd backend`, затем `.\mvnw.cmd -B -ntp test` (JDK 21+).
+
+## Как ориентироваться
 
 ```text
 frontend/src/
-  api/           HTTP, токены, auth API и students API
-  auth/          Context пользователя и защита маршрутов
-  components/    общая оболочка, таблица, фильтры, пагинация, состояния
-  pages/         вход/регистрация, профиль, список, карточка, форма
-  reactive/      переиспользуемый поток запросов списка
-  hooks/         подписка React на поток и её очистка
-  utils/         валидация
+  app/          серверные страницы, layouts, API route handlers, error/404
+  proxy.js      middleware: сессия, refresh, перенаправления, проверка роли
+  server/       HTTP к Java, cookie, кеш, серверные проверки пользователя
+  views/        интерактивные React-компоненты экранов (раньше pages/)
+  components/   таблица, меню, фильтры, пагинация, состояния, синхронизация
+  auth/         Context пользователя, полученного при SSR
+  api/          браузерные запросы к Next.js BFF и сообщения между вкладками
+  reactive/     RxJS-поток списка с отменой и задержкой ввода
+  hooks/        подписка React на поток
+  utils/        начальные фильтры и валидация
 ```
 
-Подробный разбор: [docs/LAB4_GUIDE.md](docs/LAB4_GUIDE.md). Проверка перед защитой: [docs/DEFENSE_CHECKLIST.md](docs/DEFENSE_CHECKLIST.md).
+Разбор переноса и сценарий защиты: [docs/LAB5_GUIDE.md](docs/LAB5_GUIDE.md).
+Материалы четвёртой лабы в `docs/LAB4_GUIDE.md` и прежний PDF относятся к прошлой Vite-версии: сведения о React Router, sessionStorage и Nginx в них теперь исторические.
 
-Ответы на 20 вопросов: [docs/DEFENSE_ANSWERS.md](docs/DEFENSE_ANSWERS.md). Результаты выполненных проверок: [docs/VERIFICATION.md](docs/VERIFICATION.md).
+Старые HTML и корневые `js/`, `css/`, Dockerfile, nginx.conf оставлены от лабы №3. Текущий Compose использует `frontend/Dockerfile` и Next.js.
 
-Старые HTML, корневые `js/`, `css/`, корневые Dockerfile и nginx.conf оставлены как история лабы №3. Новый Compose использует только `frontend/Dockerfile` и `frontend/nginx.conf`. Учебный компонент до перехода на API сохранён в `docs/learning/StudentsPage.before-api.jsx.txt`.
+## Границы учебной реализации
 
-## Ограничения безопасности учебного проекта
+Logout удаляет cookie, но Java пока не ведёт таблицу refresh-сессий/отзыва токенов. Копия JWT остаётся действующей до срока истечения, пока аккаунт действителен. Cookie общие для вкладок одного браузерного профиля: разные пользователи одновременно требуют разных профилей/инкогнито.
 
-Токены находятся в sessionStorage текущей вкладки; это не HttpOnly-cookie и не защита от XSS. Пароли не сохраняются. React экранирует обычный текст; dangerouslySetInnerHTML не используется. JWT-секрет находится только на backend. Cookie-аутентификации нет, запросы используют Bearer, CSRF в этой конфигурации отключён.
+Между вкладками обновления передаются в пределах одного origin. Изменения через Swagger или другой компьютер не рассылаются автоматически: кеш обновляется по времени (60 секунд, с возможной фоновой перевалидацией при чтении). Это не WebSocket/SSE.
 
-Logout очищает токены в браузере, но не отзывает скопированный токен на сервере. Серверная ротация/отзыв refresh-сессий в эту работу не добавлены: refresh действует до своего exp, если аккаунт существует и совпадает ID. Для полноценного отзыва нужна отдельная таблица сессий.
+При локальном HTTP `COOKIE_SECURE=false`; для HTTPS нужно `true`. HttpOnly закрывает чтение токенов JavaScript-кодом, но не устраняет все последствия XSS.

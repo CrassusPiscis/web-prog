@@ -1,97 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AuthContext } from "./useAuth";
 import { authApi } from "../api/authApi";
-import {
-  clearSession,
-  getTokens,
-  sessionVersion,
-  startSession,
-} from "../api/session";
-
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState(null);
-  const [attempt, setAttempt] = useState(0);
-  const loginSequence = useRef(0);
-
+export function AuthProvider({ children, initialUser }) {
+  const [updatedUser, setUpdatedUser] = useState(null);
+  const user =
+    updatedUser?.source === initialUser ? updatedUser.value : initialUser;
+  const router = useRouter();
   useEffect(() => {
-    const lifecycle = new AbortController();
-    const version = sessionVersion();
     const ended = () => {
-      loginSequence.current += 1;
-      setUser(null);
-      setError(null);
-      setReady(true);
+      router.replace("/login");
+      router.refresh();
     };
-    const permissionsChanged = () => {
-      setReady(false);
-      setAttempt((value) => value + 1);
-    };
+    const changed = () => router.refresh();
     window.addEventListener("session-ended", ended);
-    window.addEventListener("permissions-changed", permissionsChanged);
-    Promise.resolve()
-      .then(async () => {
-        if (getTokens().accessToken || getTokens().refreshToken) {
-          const value = await authApi.me();
-          if (!lifecycle.signal.aborted && sessionVersion() === version) {
-            setUser(value);
-            setError(null);
-          }
-        }
-      })
-      .catch((reason) => {
-        if (!lifecycle.signal.aborted && reason.status !== 401)
-          setError(reason);
-      })
-      .finally(() => {
-        if (!lifecycle.signal.aborted) setReady(true);
-      });
+    window.addEventListener("permissions-changed", changed);
     return () => {
-      lifecycle.abort();
       window.removeEventListener("session-ended", ended);
-      window.removeEventListener("permissions-changed", permissionsChanged);
+      window.removeEventListener("permissions-changed", changed);
     };
-  }, [attempt]);
-
-  async function login(credentials) {
-    const sequence = ++loginSequence.current;
-    const tokens = await authApi.login(credentials);
-    if (sequence !== loginSequence.current) return;
-    startSession(tokens);
-    const version = sessionVersion();
-    const current = await authApi.me();
-    if (version === sessionVersion()) {
-      setUser(current);
-      setError(null);
-      setReady(true);
-    }
-  }
-  function logout() {
-    clearSession();
+  }, [router]);
+  async function logout() {
+    await authApi.logout();
+    router.replace("/login");
+    router.refresh();
   }
   async function refreshUser() {
-    const version = sessionVersion();
-    const value = await authApi.me();
-    if (sessionVersion() === version) setUser(value);
-    return value;
+    const current = await authApi.me();
+    setUpdatedUser({ source: initialUser, value: current });
+    router.refresh();
+    return current;
   }
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        ready,
-        error,
-        login,
-        logout,
-        refreshUser,
-        retry: () => {
-          setError(null);
-          setReady(false);
-          setAttempt((value) => value + 1);
-        },
-      }}
-    >
+    <AuthContext.Provider value={{ user, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

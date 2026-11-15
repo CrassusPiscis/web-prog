@@ -12,22 +12,8 @@ import {
 } from "rxjs";
 import { studentsApi } from "../api/studentsApi.js";
 
-export const initialQuery = {
-  search: "",
-  id: "",
-  fullName: "",
-  group: "",
-  isuId: "",
-  dormitory: "",
-  room: "",
-  moveInDate: "",
-  foreigner: "",
-  notes: "",
-  page: 0,
-  size: 10,
-  sortBy: "fullName",
-  direction: "asc",
-};
+import { initialQuery } from "../utils/studentQuery.js";
+export { initialQuery } from "../utils/studentQuery.js";
 export function createStudentsStream(load = studentsApi.list, delay = 300) {
   const params$ = new BehaviorSubject({
     params: { ...initialQuery },
