@@ -50,6 +50,13 @@ public class UserRepository {
         );
     }
 
+    public UserResponse findPublicByUsername(String username) {
+        var result = dsl.select(ID, USERNAME, EMAIL, ROLE).from(USERS)
+                .where(USERNAME.eq(username)).fetchOne();
+        return result == null ? null : new UserResponse(result.get(ID),
+                result.get(USERNAME), result.get(EMAIL), result.get(ROLE));
+    }
+
 
     public boolean existsByEmail(String email) {
         return dsl.fetchExists(

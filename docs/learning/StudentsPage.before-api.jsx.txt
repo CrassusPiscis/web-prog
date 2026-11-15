@@ -1,0 +1,116 @@
+import { useState } from "react";
+import StudentTable from "../components/StudentTable";
+import StudentFilters from "../components/StudentFilters";
+
+function StudentsPage() {
+    const [students, setStudents] = useState([
+        {
+            id: 1,
+            fullName: "Jotaro Kujo",
+            group: "P3221", 
+            dormitory: "Белорусская 6",
+            room: 907,
+        },
+        {
+            id: 2,
+            fullName: "Joseph Joestar",
+            group: "P3221", 
+            dormitory: "Белорусская 6",
+            room: 907,
+        },
+        {
+            id: 3,
+            fullName: "Jonathan Joestar",
+            group: "P3421", 
+            dormitory: "Вяземский 5-7",
+            room: 666,
+        },
+        {
+            id: 4,
+            fullName: "Joseph Joestar",
+            group: "P3321", 
+            dormitory: "Альпийская 16",
+            room: 777,
+        }
+    ]);
+
+    const [search, setSearch] = useState("");
+    const [dormitory, setDormitory] = useState("");
+    const [sortBy, setSortBy] = useState("fullName");
+    const [page, setPage] = useState(0);
+    const pageSize = 2;
+
+    function removeStudent(id) {
+        setStudents((currentStudents) =>
+        currentStudents.filter((student) => student.id !== id)
+        );
+    }
+
+    const normalizedSearch = search.trim().toLowerCase();
+
+    const dormitories = [
+        ...new Set(students.map((student) => student.dormitory)),
+    ];
+    
+    const filteredStudents = students.filter((student) => {
+        const matchesSearch = student.fullName
+            .toLowerCase()
+            .includes(normalizedSearch);
+
+        const matchesDormitory =
+            dormitory === "" || student.dormitory === dormitory;
+
+        return matchesSearch && matchesDormitory;
+        });
+
+        const sortedStudents = [...filteredStudents].sort((first, second) => {
+        if (sortBy === "room") {
+            return first.room - second.room;
+        }
+
+        return first.fullName.localeCompare(second.fullName, "ru");
+        });
+
+    const totalPages = Math.ceil(sortedStudents.length / pageSize);
+
+    const pageStudents = sortedStudents.slice(
+    page * pageSize,
+    (page + 1) * pageSize
+    );
+
+    return (
+        <main>
+            <h1>Студенты </h1>
+            <p>Здесь можно посмотреть студентов и управляеть записями.</p>
+            <p>Всего студентов: {students.length}</p>
+            <p>Найдено: {filteredStudents.length}</p>
+
+            <button type="button"> Добавить студента</button>
+
+            <StudentFilters
+            search={search}
+            onSearchChange={setSearch}
+            dormitory={dormitory}
+            onDormitoryChange={setDormitory}
+            dormitories={dormitories}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            />
+
+            <StudentTable
+            students={pageStudents}
+            onDelete={removeStudent}
+            emptyMessage={
+                students.length === 0
+                ? "Все студенты выселены"
+                : "По вашему запросу никого не найдено"
+            }
+            />
+        <p>
+        Страница {totalPages === 0 ? 0 : page + 1} из {totalPages}
+        </p>
+        </main>
+    );
+}
+
+export default StudentsPage;
